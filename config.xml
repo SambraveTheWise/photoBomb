@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.seniorproject.photobomb" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>PhotoBomb</name>
+    <description>
+        An app that lets the user take a picture, and then removes the background from that image by performing image processing techniques such as image segmentation.
+    </description>
+    <author email="console.beep@gmail.com" href="http://cordova.io">
+        Kevin Hardy
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+</widget>

@@ -31,3 +31,48 @@ body {
     width:100%;
 }
 
+.cameraButton {
+    position: fixed;
+    bottom: 10px;
+    width: 100px;
+    height: 100px;
+    left: 50%;
+    margin-left: -50px;
+    border-radius: 50px;
+    
+    background-color: #000000;
+    color: #4d4dff;
+}
+.cameraButton:active {
+    color: #ffffff;
+    /*background-color: #83f52c; neon green */
+    
+    background-color: #fd5f00;
+}
+
+.cameraButtonIcon {
+    margin-left: 26%;
+    margin-top: 26%;
+    color: inherit;
+}
+
+.bottomPanel {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 80px;
+
+    background-color: #4d4dff;
+}
+
+.theCanvas {
+    box-shadow: 4px 4px 8px #aaaaaa;
+    border: 1px solid #aaaaaa;
+    
+    display: block;
+    margin: 40px auto;
+    
+    width: 330px;
+    height: 440px;
+}

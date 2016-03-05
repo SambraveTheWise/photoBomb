@@ -35,3 +35,17 @@ photoBomb.config(['$routeProvider',
                 controller: 'bombController'
             })            
     }]);
+
+
+/*
+    For the data that is shared among multiple controllers
+*/
+photoBomb.factory('BombService', [function () {
+    var bombInfo = {};
+
+    bombInfo.photoData = {};
+    bombInfo.photoWidth = 600;
+    bombInfo.photoHeight = 800;
+    
+    return bombInfo;
+}]);

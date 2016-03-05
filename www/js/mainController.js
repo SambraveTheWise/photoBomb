@@ -1,8 +1,8 @@
-angular.module('photoBombApp').controller('mainController', ['$scope', '$route', 
-    function ($scope, $route) {
-        
-        var photoWidth = 600;
-        var photoHeight = 800;
+angular.module('photoBombApp').controller('mainController', ['$scope', '$route', 'BombService',
+    function ($scope, $route, BombService) {
+                                          
+        var photoWidth = BombService.photoWidth;
+        var photoHeight = BombService.photoHeight;  
         
         /*
             Ensures that the actual size of the canvas (not necessarily
@@ -13,6 +13,14 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
         theCanvas.width = photoWidth;
         theCanvas.height = photoHeight;
         var canvasContext = theCanvas.getContext("2d");
+        
+        
+        // Initialize the canvas with the picture that was taken previously      
+        // only put it to the canvas if the data is actually there
+        if (BombService.photoData.data) {
+            canvasContext.putImageData(BombService.photoData, 0, 0);
+        }
+        
         
         /*
             On success of taking the picture
@@ -32,6 +40,11 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
                 // get the image data to be used in background removal
                 var pixelData = canvasContext.getImageData(0, 0, photoWidth, photoHeight);
 
+                // give the service the pixel data
+                BombService.photoData = pixelData;
+                
+                /*
+                //LOOP THROUGH AND MAKE IT BLUE
                 var numPixelParts = pixelData.data.length;
                 for (i = 0; i < numPixelParts; i += 4) {
                     for (j = 0; j < 4; j++) {
@@ -44,6 +57,8 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
                 }
                 
                 canvasContext.putImageData(pixelData, 0, 0);
+                */
+                
             }
         }
         
@@ -69,5 +84,19 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
                 }
             );   
         }
-    
+        
+        /*
+            Erases the canvas and removes the image data
+        */
+        $scope.eraseCanvas = function() {
+            canvasContext.clearRect(0, 0, photoWidth, photoHeight);
+            BombService.photoData = {};
+        }
+        
+        /*
+            Navigate to the bomb page
+        */
+        $scope.toDaBomb = function() {
+            window.location.href = "#/bomb";
+        }
     }]);

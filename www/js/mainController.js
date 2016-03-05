@@ -42,23 +42,6 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
 
                 // give the service the pixel data
                 BombService.photoData = pixelData;
-                
-                /*
-                //LOOP THROUGH AND MAKE IT BLUE
-                var numPixelParts = pixelData.data.length;
-                for (i = 0; i < numPixelParts; i += 4) {
-                    for (j = 0; j < 4; j++) {
-                        
-                        // 2 is the blue part of the pixel
-                        if (j == 2) {
-                            pixelData.data[i + j] = 220;
-                        }
-                    }
-                }
-                
-                canvasContext.putImageData(pixelData, 0, 0);
-                */
-                
             }
         }
         

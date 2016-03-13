@@ -44,6 +44,7 @@ photoBomb.factory('BombService', [function () {
     var bombInfo = {};
 
     bombInfo.photoData = {};
+    bombInfo.smallPhotoData = {};
     bombInfo.photoWidth = 600;
     bombInfo.photoHeight = 800;
     

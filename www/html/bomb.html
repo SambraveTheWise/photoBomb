@@ -1,4 +1,9 @@
-<canvas id="bombCanvas" class="theCanvas"></canvas>
+<!-- HIDDEN FOR NOW -->
+<canvas id="bombCanvas" class="theCanvas" style="display: none"></canvas>
+
+
+
+<canvas id="smallCanvas" class="theCanvas"></canvas>
 <div class="bottomPanel" ng-class="{settingsOpen : settingsOpen}">
     <div class="barsButton" ng-click="toggleSettings()">
         <i class="fa fa-3x fa-bars barsIcon"></i>
@@ -8,5 +13,11 @@
     </div>
     <div class="checkButton" ng-click="toDaCamera()">
         <i class="fa fa-3x fa-home checkIcon"></i>
-    </div>    
+    </div>
+    
+    <div class="thresholdValue">Threshold: {{pixelThreshold}}</div>
+    <div>
+        <input class="thresholdSlider" ng-model="pixelThreshold" type="range" min="0" max="765" step="1"/>
+    </div>
+                                                                    
 </div>

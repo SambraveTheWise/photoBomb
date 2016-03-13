@@ -15,6 +15,33 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
         var canvasContext = theCanvas.getContext("2d");
         
         
+        // Generate the canvas for the small image
+        var smallCanvas = document.createElement('canvas');
+        smallCanvas.width = photoWidth / 8;
+        smallCanvas.height = photoHeight / 8;
+        var smallContext = smallCanvas.getContext("2d");        
+        
+        
+        /*
+            If not on a mobile device, put a default image on
+        */
+        if (!window.cordova) {
+            console.log("Running in the browser - default image in canvas");
+            
+            var defaultImage = document.getElementById("defaultImage");
+            
+            defaultImage.onload = function() {
+                // put on normal canvas
+                canvasContext.drawImage(defaultImage, 0, 0, photoWidth, photoHeight);
+                BombService.photoData = canvasContext.getImageData(0, 0, photoWidth, photoHeight);
+                
+                // put on small canvas
+                smallContext.drawImage(defaultImage, 0, 0, photoWidth / 8, photoHeight / 8);
+                BombService.smallPhotoData = smallContext.getImageData(0, 0, photoWidth / 8, photoHeight / 8);
+            }
+        }
+        
+        
         // Initialize the canvas with the picture that was taken previously      
         // only put it to the canvas if the data is actually there
         if (BombService.photoData.data) {
@@ -27,21 +54,30 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
         */
         $scope.photoSuccessCallback = function (imgData) {
             
+            // Start loading the image
             imgData = "data:image/jpeg;base64," + imgData;
-            
             var theImage = new Image();
             theImage.src = imgData;
             
+            
             theImage.onload = function() {
                 
-                // draw the image to the canvas
+                //////////  NORMAL CANVAS  //////////
+                
+                // draw the image to the normal canvas
                 canvasContext.drawImage(theImage, 0, 0, photoWidth, photoHeight);
                 
-                // get the image data to be used in background removal
-                var pixelData = canvasContext.getImageData(0, 0, photoWidth, photoHeight);
-
-                // give the service the pixel data
-                BombService.photoData = pixelData;
+                // send full-size image data to the service
+                BombService.photoData = canvasContext.getImageData(0, 0, photoWidth, photoHeight);
+                
+                
+                ///////////  SMALL CANVAS  //////////
+                
+                // draw image to small canvas
+                smallContext.drawImage(theImage, 0, 0, photoWidth / 8, photoHeight / 8);
+                
+                // send small image data to the service
+                BombService.smallPhotoData = smallContext.getImageData(0, 0, photoWidth / 8, photoHeight / 8);
             }
         }
         

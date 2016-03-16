@@ -2,7 +2,9 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
     function ($scope, $route, BombService) {
                                           
         var photoWidth = BombService.photoWidth;
-        var photoHeight = BombService.photoHeight;  
+        var photoHeight = BombService.photoHeight;
+        var smallPhotoWidth = BombService.smallPhotoWidth;
+        var smallPhotoHeight = BombService.smallPhotoHeight;
         
         /*
             Ensures that the actual size of the canvas (not necessarily
@@ -17,8 +19,8 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
         
         // Generate the canvas for the small image
         var smallCanvas = document.createElement('canvas');
-        smallCanvas.width = photoWidth / 8;
-        smallCanvas.height = photoHeight / 8;
+        smallCanvas.width = smallPhotoWidth;
+        smallCanvas.height = smallPhotoHeight;
         var smallContext = smallCanvas.getContext("2d");        
         
         
@@ -36,8 +38,8 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
                 BombService.photoData = canvasContext.getImageData(0, 0, photoWidth, photoHeight);
                 
                 // put on small canvas
-                smallContext.drawImage(defaultImage, 0, 0, photoWidth / 8, photoHeight / 8);
-                BombService.smallPhotoData = smallContext.getImageData(0, 0, photoWidth / 8, photoHeight / 8);
+                smallContext.drawImage(defaultImage, 0, 0, smallPhotoWidth, smallPhotoHeight);
+                BombService.smallPhotoData = smallContext.getImageData(0, 0, smallPhotoWidth, smallPhotoHeight);
             }
         }
         
@@ -74,10 +76,10 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
                 ///////////  SMALL CANVAS  //////////
                 
                 // draw image to small canvas
-                smallContext.drawImage(theImage, 0, 0, photoWidth / 8, photoHeight / 8);
+                smallContext.drawImage(theImage, 0, 0, smallPhotoWidth, smallPhotoHeight);
                 
                 // send small image data to the service
-                BombService.smallPhotoData = smallContext.getImageData(0, 0, photoWidth / 8, photoHeight / 8);
+                BombService.smallPhotoData = smallContext.getImageData(0, 0, smallPhotoWidth, smallPhotoHeight);
             }
         }
         

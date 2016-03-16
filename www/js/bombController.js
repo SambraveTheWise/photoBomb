@@ -4,11 +4,17 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         // Initialize photo info from service
         var photoWidth = BombService.photoWidth;
         var photoHeight = BombService.photoHeight;
+        var smallPhotoWidth = BombService.smallPhotoWidth;
+        var smallPhotoHeight = BombService.smallPhotoHeight;
+        
         var pixelData = BombService.photoData;
         var smallPixelData = BombService.smallPhotoData;
         
         // Threshold for if pixels are similar enough to each other
-        $scope.pixelThreshold = 200;
+        $scope.pixelThreshold = 85;
+        
+        // Threshold for how few pixels can be in a region
+        $scope.regionThreshold = 10;
         
         // Initialize the canvas with the picture that was taken
         var bombCanvas = document.getElementById("bombCanvas");
@@ -20,19 +26,14 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         }
         
         // Initialize the small canvas
-        // TODO - in the future do createElement("canvas");
+        // TODO - in the future do createElement("canvas")?
         var smallCanvas = document.getElementById("smallCanvas");
-        smallCanvas.width = photoWidth / 8;
-        smallCanvas.height = photoHeight / 8;
+        smallCanvas.width = smallPhotoWidth;
+        smallCanvas.height = smallPhotoHeight;
         var sCtx = smallCanvas.getContext("2d");
-        
-        console.log("test1");
         if (smallPixelData.data) {
-            console.log("test2");
             sCtx.putImageData(smallPixelData, 0, 0);
         }
-        
-        
 
         
         /*
@@ -65,12 +66,15 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             //testMakeItBlue();
             //testDrawLines();
             //testFirstPixelThreshold();
-            upDownLeftRight();
+            //upDownLeftRight();
             
-            //ultimateSegmentation();
+            ultimateSegmentation();
             
-            // put finished photo on canvas
-            bCtx.putImageData(pixelData, 0, 0);
+            // put finished photo on small canvas
+            sCtx.putImageData(smallPixelData, 0, 0);
+            
+            // put finished photo on normal canvas
+            //bCtx.putImageData(pixelData, 0, 0);
         }
         ///////////////////////////////////
         
@@ -85,7 +89,7 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 values are the green value, the blue value, and opacity)
             */
             function getPixelIndex(xPix, yPix) {
-                var pixelIndex = ((photoWidth * yPix) + xPix) * 4;
+                var pixelIndex = ((smallPhotoWidth * yPix) + xPix) * 4;
                 console.log("getPixelIndex(" + xPix + ", " + yPix + " = " + pixelIndex);
                 
                 return pixelIndex;
@@ -93,10 +97,10 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         
             /* Functions for getting pixel x and y from the index */
             function getPixelX(pixelIndex) {
-                return pixelIndex % photoWidth;
+                return pixelIndex % smallPhotoWidth;
             }
             function getPixelY(pixelIndex) {
-                return pixelIndex / photoWidth;
+                return pixelIndex / smallPhotoWidth;
             }
             
 
@@ -104,10 +108,10 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 Adds to the pixel value, keeping it at 255 or less
             */
             function addToValue(index, addValue) {
-                pixelData.data[index] = pixelData.data[index] + addValue;
+                smallPixelData.data[index] = smallPixelData.data[index] + addValue;
 
-                if (pixelData.data[index] > 255) {
-                    pixelData.data[index] = 255;
+                if (smallPixelData.data[index] > 255) {
+                    smallPixelData.data[index] = 255;
                 }
             }
 
@@ -115,10 +119,10 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 Subtracts from the pixel value, keeping it at 0 or higher
             */
             function subtractFromValue(index, subtractValue) {
-                pixelData.data[index] = pixelData.data[index] - subtractValue;
+                smallPixelData.data[index] = smallPixelData.data[index] - subtractValue;
 
-                if (pixelData.data[index] < 0) {
-                    pixelData.data[index] = 0;
+                if (smallPixelData.data[index] < 0) {
+                    smallPixelData.data[index] = 0;
                 }
             }
         
@@ -127,9 +131,10 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 Returns true if the two pixels are similar to each other, given the threshold
             */
             function comparePixels(index1, index2) {
-                var pixelDifference = Math.abs(pixelData.data[index1] - pixelData.data[index2]) +
-                    Math.abs(pixelData.data[index1 + 1] - pixelData.data[index2 + 1]) +
-                    Math.abs(pixelData.data[index1 + 2] - pixelData.data[index2 + 2]);
+                var pixelDifference = 
+                    Math.abs(smallPixelData.data[index1] - smallPixelData.data[index2]) +
+                    Math.abs(smallPixelData.data[index1 + 1] - smallPixelData.data[index2 + 1]) +
+                    Math.abs(smallPixelData.data[index1 + 2] - smallPixelData.data[index2 + 2]);
                     
                 return pixelDifference <= $scope.pixelThreshold;
             }
@@ -140,11 +145,9 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             */
             function colorize(pixelIndex, rValue, gValue, bValue) {
                 
-                //console.log("Colorizing: " + rValue + ", " + gValue + ", " + bValue);
-                
-                pixelData.data[pixelIndex] = rValue;
-                pixelData.data[pixelIndex + 1] = gValue;
-                pixelData.data[pixelIndex + 2] = bValue;
+                smallPixelData.data[pixelIndex] = rValue;
+                smallPixelData.data[pixelIndex + 1] = gValue;
+                smallPixelData.data[pixelIndex + 2] = bValue;
             }
         
             /*
@@ -153,11 +156,11 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             function colorizeAdd(pixelIndex, rValue, gValue, bValue) {
                 console.log("Colorizing (adding): " + rValue + ", " + gValue + ", " + bValue);
                 
-                pixelData.data[pixelIndex] += rValue;
+                smallPixelData.data[pixelIndex] += rValue;
                 rValue = rValue % 256;
-                pixelData.data[pixelIndex + 1] += gValue;
+                smallPixelData.data[pixelIndex + 1] += gValue;
                 gValue = gValue % 256;
-                pixelData.data[pixelIndex + 2] += bValue;
+                smallPixelData.data[pixelIndex + 2] += bValue;
                 bValue = bValue % 256;
             }
         
@@ -166,7 +169,7 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 Returns -1 if non-existant (e.g. at edge of image)
             */
             function getTopNeighbor(pixelIndex) {
-                var top = pixelIndex - (photoWidth * 4);
+                var top = pixelIndex - (smallPhotoWidth * 4);
                 
                 if (top < 0) {
                     top = -1;
@@ -180,9 +183,9 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 Returns -1 if non-existant (e.g. at edge of image)
             */
             function getBottomNeighbor(pixelIndex) {
-                var bottom = pixelIndex + (photoWidth * 4);
+                var bottom = pixelIndex + (smallPhotoWidth * 4);
                 
-                if (bottom > pixelData.data.length) {
+                if (bottom > smallPixelData.data.length) {
                     bottom = -1;
                 }
                 
@@ -196,7 +199,7 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             function getLeftNeighbor(pixelIndex) {
                 var left = pixelIndex - 4;
                 
-                if (pixelIndex % photoWidth == 0) {
+                if (pixelIndex % smallPhotoWidth == 0) {
                     return -1;
                 }
                     
@@ -210,7 +213,7 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             function getRightNeighbor(pixelIndex) {
                 var right = pixelIndex + 4;
                 
-                if (right % photoWidth == 0) {
+                if (right % smallPhotoWidth == 0) {
                     return -1;
                 }
                     
@@ -236,7 +239,7 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         
         // A list of pixels that are not in a region yet (prepopulated with all image pixels)
         var pixelsRemaining = [];
-        for (i = 0; i < pixelData.data.length; i+= 4) {
+        for (i = 0; i < smallPixelData.data.length; i+= 4) {
             pixelsRemaining.push(i);
         }
         
@@ -254,20 +257,23 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 var currentPixel = pixelsRemaining[0];
                 
                 // find the region and put it in the list of regions
-                segments.push(getRegion(currentPixel));
+                segments.push(discoverRegion(currentPixel));
                 
                 console.log("Pushed a segment");
             }
             
+            // get rid of smaller regions - melt them onto neighboring regions
+            meltRegions();
+            
             // colorize all of the regions
-            colorRegions();
+            colorRegions(false);
         }
         
         
         /*
             Given a pixel, returns that pixel's region (i.e. an array of pixels)
         */
-        function getRegion(startPixel) {
+        function discoverRegion(startPixel) {
             
             console.log("Getting a region based off of pixel: " + startPixel);
             
@@ -451,20 +457,101 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         /*
             Color each region with a different color
         */
-        function colorRegions() {
+        function colorRegions(averageColors) {
             
             // loop through all regions
             for (i = 0; i < segments.length; i++) {
                 
-                // generate a random color
-                var red = Math.floor(Math.random() * 256);
-                var blue = Math.floor(Math.random() * 256);
-                var green = Math.floor(Math.random() * 256);                
+                
+                if (averageColors) {
+                    /*
+                        Cycle through all of the pixels to find the average color for the region
+                    */
+                    var rVal = 0;
+                    var gVal = 0;
+                    var bVal = 0;
+                    var totalSegments = segments[i].length;
+                    for (j = 0; j < segments[i].length; j++) {
+                        rVal += smallPixelData.data[segments[i][j]];
+                        gVal += smallPixelData.data[segments[i][j] + 1];
+                        bVal += smallPixelData.data[segments[i][j] + 2];
+                    }
+
+                    // divide by occurrences to get average color values
+                    rVal = rVal / totalSegments;
+                    gVal = gVal / totalSegments;
+                    bVal = bVal / totalSegments;
+                }
+                else {                
+                    //generate a random color
+                    var rVal = Math.floor(Math.random() * 256);
+                    var bVal = Math.floor(Math.random() * 256);
+                    var gVal = Math.floor(Math.random() * 256);                
+                }
                 
                 // loop through all pixels in that region, colorizing them
                 for (j = 0; j < segments[i].length; j++) {
+                    colorize(segments[i][j], rVal, gVal, bVal);
+                }
+            }
+        }
+        
+        
+        /*
+            Returns the region that the pixel is in
+        */
+        function getRegion(pixelIndex) {
+            
+            // loop through all the regions, looking for the pixel
+            for (i = 0; i < segments.length; i++) {
+                
+                // if the pixel is in the array, return the segment
+                if (segments[i].indexOf(pixelIndex) != -1) {
                     
-                    colorize(segments[i][j], red, blue, green);
+                    return i;
+                }
+            }
+            
+            // no pixel was found     
+            return -1;
+        }
+        
+        
+        /*
+            Get rid of the smaller regions - melt the smaller regions onto
+            the neighboring regions
+        */
+        function meltRegions() {
+            
+            // loop through all regions (except first), melting the small ones onto big ones
+            for (var i = 1; i < segments.length; i++) {
+                
+                // if the region is small (e.g. has less pixels than regionThreshold)
+                if (segments[i].length < $scope.regionThreshold && segments[i].length > 0) {
+                    
+                    console.log("Region " + i + " has " + segments[i].length + " pixels - TOO SMALL!");
+                    
+                    /* melt the region onto the region to the left of it */
+                    
+                    // get the region that the pixels will melt onto
+                    var connectedRegion = getLeftNeighbor(segments[i][0])
+                    if (connectedRegion == -1) {
+                        // the top region is the connected region if on the left side of the image
+                        connectedRegion = getTopNeighbor(segments[i][0]);
+                    }
+                    var hungryRegion = getRegion(connectedRegion);
+
+                    console.log("Region " + i + " melting onto region " + hungryRegion);
+                    
+                    // loop through small region, melting onto hungry region
+                    for (j = 0; j < segments[i].length; j++) {
+                        
+                        // melt onto region
+                        segments[hungryRegion].push(segments[i][j]);
+                    }
+                    
+                    // remove all pixels in region that was just melted
+                    segments[i].length = 0;
                 }
             }
         }

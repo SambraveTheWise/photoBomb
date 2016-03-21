@@ -6,15 +6,16 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         var photoHeight = BombService.photoHeight;
         var smallPhotoWidth = BombService.smallPhotoWidth;
         var smallPhotoHeight = BombService.smallPhotoHeight;
-        
         var pixelData = BombService.photoData;
         var smallPixelData = BombService.smallPhotoData;
         
+        
+        /* TODO - programmatically determine what the thresholds should be? */
         // Threshold for if pixels are similar enough to each other
-        $scope.pixelThreshold = 85;
+        $scope.pixelThreshold = 50;
         
         // Threshold for how few pixels can be in a region
-        $scope.regionThreshold = 10;
+        $scope.regionThreshold = 30;
         
         // Initialize the canvas with the picture that was taken
         var bombCanvas = document.getElementById("bombCanvas");
@@ -26,7 +27,6 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         }
         
         // Initialize the small canvas
-        // TODO - in the future do createElement("canvas")?
         var smallCanvas = document.getElementById("smallCanvas");
         smallCanvas.width = smallPhotoWidth;
         smallCanvas.height = smallPhotoHeight;
@@ -34,7 +34,12 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         if (smallPixelData.data) {
             sCtx.putImageData(smallPixelData, 0, 0);
         }
-
+        
+        // Initialize array of transparent pixels
+        var mask = sCtx.getImageData(0, 0, smallPhotoWidth, smallPhotoHeight);
+        for (var i = 0; i < mask.data.length; i++) {
+            mask.data[i] = 0;
+        }
         
         /*
             Open and close the settings
@@ -62,19 +67,8 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         $scope.kaboom = function() {
             console.log("ka-BOOM!!!");
             
-            
-            //testMakeItBlue();
-            //testDrawLines();
-            //testFirstPixelThreshold();
-            //upDownLeftRight();
-            
+            // remove the background
             ultimateSegmentation();
-            
-            // put finished photo on small canvas
-            sCtx.putImageData(smallPixelData, 0, 0);
-            
-            // put finished photo on normal canvas
-            //bCtx.putImageData(pixelData, 0, 0);
         }
         ///////////////////////////////////
         
@@ -89,7 +83,7 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 values are the green value, the blue value, and opacity)
             */
             function getPixelIndex(xPix, yPix) {
-                var pixelIndex = ((smallPhotoWidth * yPix) + xPix) * 4;
+                var pixelIndex = ((smallPhotoWidth * yPix) + xPix) * 4 - 2;
                 console.log("getPixelIndex(" + xPix + ", " + yPix + " = " + pixelIndex);
                 
                 return pixelIndex;
@@ -220,6 +214,46 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 return right;
             }
         
+            /*
+                Returns the center region's index
+            */
+            function getCenterRegion() {
+                
+                // get center pixel index
+                var centerPixelX = smallPhotoWidth / 2;
+                var centerPixelY = smallPhotoHeight / 2;
+                var centerIndex = getPixelIndex(centerPixelX, centerPixelY);
+                
+                // look through regions, finding which one contains the center pixel
+                for (var i = 0; i < segments.length; i++) {
+                    
+                    // if pixel is in region, return the region's index
+                    for (var j = 0; j < segments[i].length; j++) {
+                        
+                        if (centerIndex == segments[i][j]) {
+                        
+                            // return center region's index
+                            return i;
+                        }
+                    }
+                }
+                
+                // return -1 if center pixel is not in any region (SHOULDN'T EVER HAPPEN)
+                return -1;
+            }
+        
+            /*
+                Adds the given region to the mask
+            */
+            function addRegionToMask(regionIndex) {
+                
+                // loop through region pixels, adding full alpha to the mask
+                for (var i = 0; i < segments[regionIndex].length; i++) {
+                    
+                    mask.data[segments[regionIndex][i] + 3] = 255;
+                }
+            }
+        
         //
         //
         //////////////////////////////////////////////////////////////////////////////////
@@ -267,6 +301,46 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             
             // colorize all of the regions
             colorRegions(false);
+            
+            // get center region
+            var centerRegion = getCenterRegion();
+            
+            // add center region to mask (alpha)
+            addRegionToMask(centerRegion);
+            
+            /* scale mask to full photo width */
+            // draw mask to a small canvas
+            sCtx.putImageData(mask, 0, 0);
+            
+            // get image url
+            var maskURL = smallCanvas.toDataURL();
+            
+            // create big canvas (same size as other big canvas)
+            var bigMask = document.createElement("canvas");
+            bigMask.width = photoWidth;
+            bigMask.height = photoHeight;
+            var maskContext = bigMask.getContext("2d");
+            
+            // draw image mask to a big canvas
+            var maskImg = new Image;
+            maskImg.src = maskURL;
+            maskImg.onload = function() {
+                maskContext.drawImage(maskImg, 0, 0, photoWidth, photoHeight);
+            
+
+                // get the pixel data from that big canvas
+                var bigMaskPixels = maskContext.getImageData(0, 0, photoWidth, photoHeight);
+
+                /* apply mask to big image (set all alphas) */
+                // loop through all alphas, setting image alphas to mask alphas
+                for (var i = 3; i < pixelData.data.length; i+=4) {
+
+                    pixelData.data[i] = bigMaskPixels.data[i];
+                }
+
+                // draw final masked big image
+                bCtx.putImageData(pixelData, 0, 0);
+            }
         }
         
         

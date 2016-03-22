@@ -152,3 +152,37 @@ body {
     margin: auto;
     margin-top: 20px;
 }
+
+.imagePicker {
+    width: 95%;
+    height: 150px;
+    margin: auto;
+    margin-top: 20px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
+    text-align: left;
+    padding-bottom: 10px;
+}
+
+.pickerSquare {
+    display: inline-block;
+    width: 113px; /* maintain 600 x 800 image ratio */
+    height: 150px;
+    margin-left: 10px;
+    background-color: #FFFFFF;
+    
+    border-radius: 10px;
+    box-shadow: 8px 8px 10px #333333;
+}
+.pickerSquare:hover {
+    border: 2px solid #ff0000;
+    width: 109px;
+    height: 146px;
+}
+
+.pickerImage {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+}

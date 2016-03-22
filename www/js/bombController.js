@@ -1,6 +1,11 @@
 angular.module('photoBombApp').controller('bombController', ['$scope', '$route', 'BombService',
     function ($scope, $route, BombService) {
         
+        // navigate home if no image data (usually happens on force refresh of this page)
+        if (!BombService.photoData.data) {
+            window.location.href = "#";
+        }
+        
         // Initialize photo info from service
         var photoWidth = BombService.photoWidth;
         var photoHeight = BombService.photoHeight;
@@ -9,6 +14,11 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         var pixelData = BombService.photoData;
         var smallPixelData = BombService.smallPhotoData;
         
+        // Initialize default selection of images
+        $scope.defaultImages =  [   
+                                    "img/MauraShirt.png",
+                                    "img/deathking.jpg"
+                                ];
         
         /* TODO - programmatically determine what the thresholds should be? */
         // Threshold for if pixels are similar enough to each other
@@ -57,7 +67,25 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             window.location.href = "#";
         }
         
-        
+        /*
+            New image selected
+        */
+        $scope.newImage = function(path) {
+            
+            // draw image to canvas
+            var newImg = new Image;
+            newImg.src = path;
+            newImg.onload = function() {
+                bCtx.drawImage(newImg, 0, 0, photoWidth, photoHeight);
+                sCtx.drawImage(newImg, 0, 0, photoWidth, photoHeight, 0, 0, smallPhotoWidth, smallPhotoHeight);
+                
+                // load the drawn images' pixels
+                pixelData = bCtx.getImageData(0, 0, photoWidth, photoHeight);
+                smallPixelData = sCtx.getImageData(0, 0, smallPhotoWidth, smallPhotoHeight);
+                
+                // TODO - in future put data in service?
+            }
+        }
         
         
         ///////////////// BACKGROUND REMOVAL //////////////////
@@ -245,12 +273,55 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             /*
                 Adds the given region to the mask
             */
-            function addRegionToMask(regionIndex) {
+            function addRegionToMask(regionIndex, antialias) {
                 
                 // loop through region pixels, adding full alpha to the mask
                 for (var i = 0; i < segments[regionIndex].length; i++) {
                     
+                    // add full alpha
                     mask.data[segments[regionIndex][i] + 3] = 255;
+                    
+                    // if antialiasing, add partial alpha to neighboring pixels
+                    if (antialias) {
+                        
+                        // partial alpha value for antialiasing
+                        var partialAlpha = 80;
+                        
+                        // get top / bottom / left / right neighbors
+                        var topOne = getTopNeighbor(segments[regionIndex][i]);
+                        var bottomOne = getBottomNeighbor(segments[regionIndex][i]);
+                        var leftOne = getLeftNeighbor(segments[regionIndex][i]);
+                        var rightOne = getRightNeighbor(segments[regionIndex][i]);
+                        
+                        // add to top / bottom / left / right alphas (max 255)
+                        if (topOne != -1) {
+                            mask.data[topOne + 3] += partialAlpha;
+                            if (mask.data[topOne + 3] > 255) {
+                                mask.data[topOne + 3] = 255;
+                            }
+                        }
+                        
+                        if (bottomOne != -1) {
+                            mask.data[bottomOne + 3] += partialAlpha;
+                            if (mask.data[bottomOne + 3] > 255) {
+                                mask.data[bottomOne + 3] = 255;
+                            }                            
+                        }
+                        
+                        if (leftOne != -1) {
+                            mask.data[leftOne + 3] += partialAlpha;
+                            if (mask.data[leftOne + 3] > 255) {
+                                mask.data[leftOne + 3] = 255;
+                            }                            
+                        }
+                        
+                        if (rightOne != -1) {
+                            mask.data[rightOne + 3] += partialAlpha;
+                            if (mask.data[rightOne + 3] > 255) {
+                                mask.data[rightOne + 3] = 255;
+                            }                            
+                        }                        
+                    }    
                 }
             }
         
@@ -306,7 +377,7 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             var centerRegion = getCenterRegion();
             
             // add center region to mask (alpha)
-            addRegionToMask(centerRegion);
+            addRegionToMask(centerRegion, true);
             
             /* scale mask to full photo width */
             // draw mask to a small canvas
@@ -327,7 +398,6 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             maskImg.onload = function() {
                 maskContext.drawImage(maskImg, 0, 0, photoWidth, photoHeight);
             
-
                 // get the pixel data from that big canvas
                 var bigMaskPixels = maskContext.getImageData(0, 0, photoWidth, photoHeight);
 
@@ -642,6 +712,11 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         
         
         
+        
+        
+        
+        
+////////////////////// JUST TESTING FUNCTIONS DOWN HERE /////////////////////////////////
         
         
         /*

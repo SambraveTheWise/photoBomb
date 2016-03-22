@@ -22,6 +22,13 @@
     <div class="thresholdValue">Region Size Threshold: {{regionThreshold}}</div>
     <div>
         <input class="thresholdSlider" ng-model="regionThreshold" type="range" min="0" max="1000" step="1"/>
-    </div>    
-                                                                    
+    </div>
+    
+    <div class="thresholdValue">Pick an image</div>
+    <div class="imagePicker">
+        <!-- TODO: ng-repeat="square in defaultImages" -->
+        <div class="pickerSquare" ng-repeat="square in defaultImages" ng-click="newImage(square)">
+            <img class="pickerImage" ng-src="{{square}}"/>
+        </div>
+    </div>                                                          
 </div>

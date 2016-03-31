@@ -1,6 +1,6 @@
 <!-- HIDDEN FOR NOW -->
-<canvas id="bombCanvas" class="theCanvas"></canvas>
-<canvas id="smallCanvas" class="theCanvas" style="display: none"></canvas>
+<canvas id="bombCanvas" class="theCanvas" ng-hide="showSmallCanvas"></canvas>
+<canvas id="smallCanvas" class="theCanvas" ng-show="showSmallCanvas"></canvas>
 
 
 <div class="bottomPanel" ng-class="{settingsOpen : settingsOpen}">
@@ -24,9 +24,13 @@
         <input class="thresholdSlider" ng-model="regionThreshold" type="range" min="0" max="1000" step="1"/>
     </div>
     
+    <div class="thresholdValue">Mode: {{getModeString()}}</div>
+    <div>
+        <input class="modeSlider" ng-model="mode" type="range" min="0" max="3" step="1"/>
+    </div>    
+    
     <div class="thresholdValue">Pick an image</div>
     <div class="imagePicker">
-        <!-- TODO: ng-repeat="square in defaultImages" -->
         <div class="pickerSquare" ng-repeat="square in defaultImages" ng-click="newImage(square)">
             <img class="pickerImage" ng-src="{{square}}"/>
         </div>

@@ -27,7 +27,7 @@ angular.module('photoBombApp').controller('mainController', ['$scope', '$route',
         /*
             If not on a mobile device, put a default image on
         */
-        if (!window.cordova) {
+        if (!window.cordova && !BombService.photoData.data) {
             console.log("Running in the browser - default image in canvas");
             
             var defaultImage = document.getElementById("defaultImage");

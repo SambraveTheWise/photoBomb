@@ -14,18 +14,31 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
         var pixelData = BombService.photoData;
         var smallPixelData = BombService.smallPhotoData;
         
+        // used for different modes
+        $scope.showSmallCanvas = false;
+        
         // Initialize default selection of images
         $scope.defaultImages =  [   
                                     "img/MauraShirt.png",
-                                    "img/deathking.jpg"
+                                    "img/lightblue.jpg",
+                                    "img/weirdwhite.jpg",
+                                    "img/brazil.jpg",
+                                    "img/psychic.jpg",
+                                    "img/rugby.jpg",
+                                    "img/bluebricks.png",
+                                    "img/bluewhiteboard.png",
+                                    "img/blueblinds.png",
+                                    "img/bluepurse.png",
+                                    "img/greenbricks.png",
+                                    "img/niceblue.jpg",
+                                    "img/blueonred.jpg",
+                                    "img/stripe.jpg",
+                                    "img/badbackground.jpg",
+                                    "img/weirdgreen.jpg",
+                                    "img/spongebob.jpg",            
+                                    "img/tyedye.jpg"
                                 ];
         
-        /* TODO - programmatically determine what the thresholds should be? */
-        // Threshold for if pixels are similar enough to each other
-        $scope.pixelThreshold = 50;
-        
-        // Threshold for how few pixels can be in a region
-        $scope.regionThreshold = 30;
         
         // Initialize the canvas with the picture that was taken
         var bombCanvas = document.getElementById("bombCanvas");
@@ -51,12 +64,41 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             mask.data[i] = 0;
         }
         
+        // Threshold for how few pixels can be in a region
+        $scope.regionThreshold = 70;             
+        
+        // Threshold for if pixels are similar enough to each other
+        $scope.pixelThreshold = 42; // answer to the universe
+        
+        // If in different mode
+        $scope.mode = 0;
+        $scope.getModeString = function() {
+            
+            if ($scope.mode == 0) {
+                return "Normal";
+            }
+            else if ($scope.mode == 1) {
+                return "Regions before threshold";
+            }
+            else if ($scope.mode == 2) {
+                return "Regions after threshold";
+            }
+            else {
+                return "Image mask";
+            }
+        }
+        
         /*
             Open and close the settings
         */
         $scope.settingsOpen = false;
         $scope.toggleSettings = function() {
             $scope.settingsOpen = !$scope.settingsOpen;
+            
+            // show small canvas if in different mode
+            if ($scope.mode != 0) {
+                $scope.showSmallCanvas = true;
+            }
         }
         
         
@@ -83,7 +125,25 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 pixelData = bCtx.getImageData(0, 0, photoWidth, photoHeight);
                 smallPixelData = sCtx.getImageData(0, 0, smallPhotoWidth, smallPhotoHeight);
                 
-                // TODO - in future put data in service?
+                // reset mask
+                mask = sCtx.getImageData(0, 0, smallPhotoWidth, smallPhotoHeight);
+                for (var i = 0; i < mask.data.length; i++) {
+                    mask.data[i] = 0;
+                }
+                
+                // put data in service
+                BombService.photoData = pixelData;
+                BombService.smallPhotoData = smallPixelData;
+                
+                
+                // reset array of regions
+                segments.length = 0;
+
+                // reset the pixelsRemaining array
+                pixelsRemaining.length = 0;
+                for (i = 0; i < smallPixelData.data.length; i+= 4) {
+                    pixelsRemaining.push(i);
+                }
             }
         }
         
@@ -364,7 +424,14 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
                 // find the region and put it in the list of regions
                 segments.push(discoverRegion(currentPixel));
                 
-                console.log("Pushed a segment");
+                console.log("Pushed a segment");     
+            }
+            
+            // MODE 1 - unmelted regions
+            if ($scope.mode == 1) {
+                colorRegions(false);                
+                sCtx.putImageData(smallPixelData, 0, 0);
+                return;
             }
             
             // get rid of smaller regions - melt them onto neighboring regions
@@ -372,6 +439,12 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             
             // colorize all of the regions
             colorRegions(false);
+            
+            // MODE 2 - melted regions
+            if ($scope.mode == 2) {           
+                sCtx.putImageData(smallPixelData, 0, 0);
+                return;
+            }            
             
             // get center region
             var centerRegion = getCenterRegion();
@@ -382,6 +455,11 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
             /* scale mask to full photo width */
             // draw mask to a small canvas
             sCtx.putImageData(mask, 0, 0);
+            
+            // MODE 4 - image mask
+            if ($scope.mode == 3) {
+                return;
+            }            
             
             // get image url
             var maskURL = smallCanvas.toDataURL();
@@ -410,6 +488,11 @@ angular.module('photoBombApp').controller('bombController', ['$scope', '$route',
 
                 // draw final masked big image
                 bCtx.putImageData(pixelData, 0, 0);
+            }
+            
+            // hide small canvas if in different mode
+            if ($scope.mode != 0) {
+                $scope.showSmallCanvas = false;
             }
         }
         

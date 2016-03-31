@@ -137,7 +137,7 @@ body {
 }
 
 .settingsOpen {
-    height: 500px;
+    height: 600px;
 }
 
 .thresholdValue {
@@ -148,6 +148,12 @@ body {
 }
 
 .thresholdSlider {
+    width: 90%;
+    margin: auto;
+    margin-top: 20px;
+}
+
+.modeSlider {
     width: 90%;
     margin: auto;
     margin-top: 20px;
